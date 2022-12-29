@@ -1,11 +1,12 @@
 package main
 
 import (
-	p "github.com/ljanyst/ghostscad/primitive"
+	"co2sensor/model"
+
 	"github.com/ljanyst/ghostscad/sys"
 )
 
 func main() {
 	sys.Initialize()
-	sys.RenderOne(p.NewSphere(20))
+	sys.RenderMultiple(model.CO2SensorCase())
 }
