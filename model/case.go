@@ -8,10 +8,8 @@ import (
 )
 
 type Hole struct {
-	X, Y float64
-	R    float64
-
-	// StandoffRadius defines how much larger than the holes the standoffs are.
+	X, Y           float64
+	R              float64
 	StandoffRadius float64
 }
 
