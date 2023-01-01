@@ -52,7 +52,7 @@ func NewCase(wall float64, boards ...Board) *Case {
 	}
 }
 
-func (o *Case) buildStandoff(x, height float64, hole Hole) p.Primitive {
+func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight, hole.StandoffRadius).SetCenter(false)
 
 	standoff = p.NewDifference(
@@ -72,7 +72,7 @@ func (o *Case) Build() p.Primitive {
 	for _, board := range o.Boards {
 		// Add hole standoffs.
 		for _, hole := range board.Holes {
-			holes = append(holes, o.buildStandoff(x, o.StandoffHeight, hole))
+			holes = append(holes, o.buildStandoff(x, hole))
 		}
 
 		x += board.X
