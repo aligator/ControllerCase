@@ -8,5 +8,8 @@ import (
 
 func main() {
 	sys.Initialize()
+
+	sys.SetFs(0.2)
+	sys.SetFa(12)
 	sys.RenderMultiple(model.CO2SensorCase())
 }

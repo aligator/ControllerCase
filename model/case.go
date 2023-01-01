@@ -10,6 +10,9 @@ import (
 type Hole struct {
 	X, Y float64
 	R    float64
+
+	// StandoffRadius defines how much larger than the holes the standoffs are.
+	StandoffRadius float64
 }
 
 type Board struct {
@@ -38,15 +41,29 @@ func (b Board) WithTolerance(tolerance float64) Board {
 type Case struct {
 	Primitive p.Primitive
 
-	Boards []Board
-	Wall   float64
+	Boards         []Board
+	Wall           float64
+	StandoffHeight float64
 }
 
 func NewCase(wall float64, boards ...Board) *Case {
 	return &Case{
-		Boards: boards,
-		Wall:   wall,
+		Boards:         boards,
+		Wall:           wall,
+		StandoffHeight: 1,
 	}
+}
+
+func (o *Case) buildStandoff(x, height float64, hole Hole) p.Primitive {
+	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight, hole.StandoffRadius).SetCenter(false)
+
+	standoff = p.NewDifference(
+		standoff,
+		p.NewCylinder(o.StandoffHeight+1, hole.R).SetCenter(false),
+	)
+
+	standoff = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall, o.Wall}, standoff)
+	return standoff
 }
 
 func (o *Case) Build() p.Primitive {
@@ -55,17 +72,15 @@ func (o *Case) Build() p.Primitive {
 	// Build the base-block.
 	var x, y, height float64
 	for _, board := range o.Boards {
-		// Add holes.
+		// Add hole standoffs.
 		for _, hole := range board.Holes {
-			var h p.Primitive = p.NewCylinder(20, hole.R)
-			h = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall}, h)
-			holes = append(holes, h)
+			holes = append(holes, o.buildStandoff(x, o.StandoffHeight, hole))
 		}
 
 		x += board.X
 
 		y = math.Max(y, board.Y)
-		height = math.Max(height, board.Height)
+		height = math.Max(height, board.Height+o.StandoffHeight) // Take into account the StandoffHeight.
 	}
 
 	xWithWall := x + 2*o.Wall
