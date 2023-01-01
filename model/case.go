@@ -26,11 +26,11 @@ func (b Board) WithTolerance(tolerance float64) Board {
 	withTolerance.X += tolerance * 2
 	withTolerance.Y += tolerance * 2
 
-  // Modify holes.
-  for i := range withTolerance.Holes {
-    withTolerance.Holes[i].X += tolerance
-    withTolerance.Holes[i].Y += tolerance
-  }
+	// Modify holes.
+	for i := range withTolerance.Holes {
+		withTolerance.Holes[i].X += tolerance
+		withTolerance.Holes[i].Y += tolerance
+	}
 
 	return withTolerance
 }
@@ -56,13 +56,13 @@ func (o *Case) Build() p.Primitive {
 	var x, y, height float64
 	for _, board := range o.Boards {
 		// Add holes.
-    for _, hole := range board.Holes {
-      var h p.Primitive = p.NewCylinder(20, hole.R)
-      h = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall}, h)
-		  holes = append(holes, h)
-    }
+		for _, hole := range board.Holes {
+			var h p.Primitive = p.NewCylinder(20, hole.R)
+			h = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall}, h)
+			holes = append(holes, h)
+		}
 
-    x += board.X
+		x += board.X
 
 		y = math.Max(y, board.Y)
 		height = math.Max(height, board.Height)
