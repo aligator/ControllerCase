@@ -7,16 +7,32 @@ import (
 	p "github.com/ljanyst/ghostscad/primitive"
 )
 
+type Side int
+
+const (
+	Top Side = iota
+	Right
+	Bottom
+	Left
+)
+
 type Hole struct {
 	X, Y           float64
 	R              float64
 	StandoffRadius float64
 }
 
+type BreakThrough struct {
+	X, Y          float64
+	Width, Height float64
+	Side          Side
+}
+
 type Board struct {
-	Holes  []Hole
-	X, Y   float64
-	Height float64
+	Holes         []Hole
+	BreakThroughs []BreakThrough
+	X, Y          float64
+	Height        float64
 }
 
 // WithTolerance returns a copy of the board, with the given tolerance added to all sides.
@@ -98,7 +114,7 @@ func (o *Case) BuildCover() p.Primitive {
 		// Cut out the inner part.
 		p.NewTranslation(
 			mgl64.Vec3{o.Wall * 2, o.Wall * 2, -1},
-			p.NewCube(mgl64.Vec3{x - o.Wall*2, y - o.Wall*2, o.Wall + 1}).SetCenter(false),
+			p.NewCube(mgl64.Vec3{x - o.Wall*2, y - o.Wall*2, o.CoverInsert + 1}).SetCenter(false),
 		),
 	)
 
