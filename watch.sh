@@ -5,4 +5,4 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 go install github.com/cosmtrek/air@latest
 openscad out.scad &
-air
+air -- $@
