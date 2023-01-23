@@ -12,7 +12,7 @@ func CO2SensorCase() []sys.Shape {
 		2,
 		AmicaNodeMCU().WithTolerance(0.6),
 		SensirionSCD30().WithTolerance(0.6),
-	)
+	).WithCoverHoles()
 
 	_, _, height := co2SensorCase.GetDimensions()
 

@@ -43,6 +43,8 @@ type Case struct {
 	Wall           float64
 	StandoffHeight float64
 	CoverInsert    float64
+
+	CoverHoles bool
 }
 
 func NewCase(wall float64, coverInsert float64, boards ...Board) *Case {
@@ -52,6 +54,11 @@ func NewCase(wall float64, coverInsert float64, boards ...Board) *Case {
 		StandoffHeight: 1,
 		CoverInsert:    coverInsert,
 	}
+}
+
+func (o *Case) WithCoverHoles() Case {
+	o.CoverHoles = true
+	return *o
 }
 
 func (o *Case) GetDimensions() (x, y, height float64) {
@@ -118,6 +125,28 @@ func (o *Case) BuildCover() p.Primitive {
 	)
 
 	cover = p.NewTranslation(mgl64.Vec3{0, 0, -o.CoverInsert + o.Wall}, cover)
+
+	if o.CoverHoles {
+		// Make the holes 2 times the wall thick.
+		holeWidth := o.Wall * 2
+		var count int = int(x / holeWidth)
+
+		holes := []p.Primitive{}
+
+		for i := 0; i < count; i += 2 {
+			holes = append(
+				holes,
+				p.NewTranslation(
+					mgl64.Vec3{float64(i)*holeWidth + o.Wall*2, o.Wall * 2, -1},
+					p.NewCube(mgl64.Vec3{holeWidth, y - 2*o.Wall, o.Wall + 2}).SetCenter(false),
+				),
+			)
+		}
+
+		cover = p.NewDifference(
+			append([]p.Primitive{cover}, holes...)...,
+		)
+	}
 
 	return cover
 }
