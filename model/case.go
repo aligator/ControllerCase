@@ -54,14 +54,14 @@ func NewCase(wall float64, coverInsert float64, boards ...Board) *Case {
 	}
 }
 
-func (o *Case) getDimensions() (x, y, height float64) {
+func (o *Case) GetDimensions() (x, y, height float64) {
 	for _, board := range o.Boards {
 		x += board.X
 		y = math.Max(y, board.Y)
 		height = math.Max(height, board.Height+o.StandoffHeight) // Take into account the StandoffHeight.
 	}
 
-	return x, y, height
+	return x, y, height + o.CoverInsert // Add cover insert to sure the boards fit.
 }
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
@@ -77,7 +77,7 @@ func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 }
 
 func (o *Case) BuildCover() p.Primitive {
-	x, y, _ := o.getDimensions()
+	x, y, _ := o.GetDimensions()
 	xWithWall := x + 2*o.Wall
 	yWithWall := y + 2*o.Wall
 
@@ -117,6 +117,8 @@ func (o *Case) BuildCover() p.Primitive {
 		outerNegative,
 	)
 
+	cover = p.NewTranslation(mgl64.Vec3{0, 0, -o.CoverInsert + o.Wall}, cover)
+
 	return cover
 }
 
@@ -134,7 +136,7 @@ func (o *Case) BuildBox() p.Primitive {
 		x += board.X
 	}
 
-	x, y, height := o.getDimensions()
+	x, y, height := o.GetDimensions()
 	xWithWall := x + 2*o.Wall
 	yWithWall := y + 2*o.Wall
 	heightWithWall := height + o.Wall
