@@ -2,7 +2,7 @@ module co2sensor
 
 go 1.19
 
-require github.com/ljanyst/ghostscad v0.2.0
+require github.com/ljanyst/ghostscad v0.2.1
 
 require (
 	github.com/cosmtrek/air v1.40.4 // indirect
