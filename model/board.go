@@ -2,7 +2,7 @@ package model
 
 // AmicaNodeMCU https://www.az-delivery.de/products/nodemcu
 func AmicaNodeMCU() Board {
-	x := 26.0
+	x := 25.5
 	y := 48.0
 	radius := 0.50
 	standoffRadius := 1.0
@@ -25,7 +25,7 @@ func AmicaNodeMCU() Board {
 func SensirionSCD30() Board {
 	x := 23.0
 	y := 35.0
-	radius := 0.50
+	radius := 0.40
 	standoffRadius := 0.8
 
 	return Board{
