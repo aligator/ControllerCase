@@ -155,8 +155,8 @@ func (o *Case) BuildCover() p.Primitive {
 
 	if o.CoverHoles {
 		// Make the holes 2 times the wall thick.
-		holeWidth := o.Wall * 2
-		var count int = int(x / holeWidth)
+		holeWidth := o.Wall * 4
+		var count int = int(x/holeWidth) - 1
 
 		holes := []p.Primitive{}
 
@@ -164,7 +164,7 @@ func (o *Case) BuildCover() p.Primitive {
 			holes = append(
 				holes,
 				p.NewTranslation(
-					mgl64.Vec3{float64(i)*holeWidth + o.Wall*2, o.Wall * 2, -1},
+					mgl64.Vec3{float64(i)*holeWidth + holeWidth, o.Wall * 2, -1},
 					p.NewCube(mgl64.Vec3{holeWidth, y - 2*o.Wall, o.Wall + 2}).SetCenter(false),
 				),
 			)
