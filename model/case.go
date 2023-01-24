@@ -99,14 +99,14 @@ func (o *Case) GetDimensions() (x, y, height float64) {
 }
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
-	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight, hole.StandoffRadius).SetCenter(false)
+	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
 
 	standoff = p.NewDifference(
 		standoff,
 		p.NewCylinder(o.StandoffHeight+1, hole.R).SetCenter(false),
 	)
 
-	standoff = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall, o.Wall}, standoff)
+	standoff = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall, 0}, standoff)
 	return standoff
 }
 
@@ -154,7 +154,7 @@ func (o *Case) BuildCover() p.Primitive {
 	cover = p.NewTranslation(mgl64.Vec3{0, 0, -o.CoverInsert + o.Wall}, cover)
 
 	if o.CoverHoles {
-		// Make the holes 2 times the wall thick.
+		// Make the holes 4 times the wall thick.
 		holeWidth := o.Wall * 4
 		var count int = int(x/holeWidth) - 1
 
