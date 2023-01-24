@@ -74,11 +74,11 @@ type Case struct {
 	CoverHoles bool
 }
 
-func NewCase(wall float64, coverInsert float64, boards ...Board) *Case {
+func NewCase(wall float64, standoffHeight float64, coverInsert float64, boards ...Board) *Case {
 	return &Case{
 		Boards:         boards,
 		Wall:           wall,
-		StandoffHeight: 1,
+		StandoffHeight: standoffHeight,
 		CoverInsert:    coverInsert,
 	}
 }
@@ -217,7 +217,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				}, cut)
 			}
 
-			cut = p.NewTranslation(mgl64.Vec3{x}, cut)
+			cut = p.NewTranslation(mgl64.Vec3{x, 0, o.StandoffHeight}, cut)
 
 			cuts = append(cuts, cut)
 		}
