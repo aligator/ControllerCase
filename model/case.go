@@ -22,17 +22,23 @@ type Hole struct {
 	StandoffRadius float64
 }
 
-type BreakThrough struct {
+// Cutout defines a hole in the wall.
+// X and Y are always relative from the side, not from the global axes.
+// So if Side is "Left", you have to look from the left side onto the box
+// and then x is from bottom-left to bottom-right,
+// and y is from bottom to top.
+type Cutout struct {
 	X, Y          float64
 	Width, Height float64
 	Side          Side
 }
 
 type Board struct {
-	Holes         []Hole
-	BreakThroughs []BreakThrough
-	X, Y          float64
-	Height        float64
+	Holes     []Hole
+	Cutouts   []Cutout
+	X, Y      float64
+	Height    float64
+	tolerance float64
 }
 
 // WithTolerance returns a copy of the board, with the given tolerance added to all sides.
@@ -49,11 +55,16 @@ func (b Board) WithTolerance(tolerance float64) Board {
 		withTolerance.Holes[i].Y += tolerance
 	}
 
+	// The cutouts need to be calculated when building.
+	// The the tolerance has to be persisted.
+	withTolerance.tolerance = tolerance
+
 	return withTolerance
 }
 
 type Case struct {
-	Primitive p.Primitive
+	BoxPrimitive   p.Primitive
+	CoverPrimitive p.Primitive
 
 	Boards         []Board
 	Wall           float64
@@ -164,7 +175,60 @@ func (o *Case) BuildCover() p.Primitive {
 		)
 	}
 
-	return cover
+	o.CoverPrimitive = cover
+
+	return o.CoverPrimitive
+}
+
+func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
+	cuts := []p.Primitive{}
+
+	x := 0.0
+	for _, board := range o.Boards {
+		for _, cutout := range board.Cutouts {
+			var cut p.Primitive = p.NewCube(mgl64.Vec3{cutout.Width, o.Wall + 2, cutout.Height}).SetCenter(false)
+
+			switch cutout.Side {
+			case Top:
+				cut = p.NewTranslation(mgl64.Vec3{
+					cutout.X + board.tolerance + o.Wall,
+					board.Y + o.Wall - 1,
+					o.Wall + cutout.Y,
+				}, cut)
+			case Right:
+				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
+				cut = p.NewTranslation(mgl64.Vec3{
+					o.Wall*2 + 1 + board.X,
+					o.Wall + cutout.X + board.tolerance,
+					o.Wall + cutout.Y,
+				}, cut)
+			case Bottom:
+				cut = p.NewTranslation(mgl64.Vec3{
+					o.Wall + cutout.X + board.tolerance,
+					-1,
+					o.Wall + cutout.Y,
+				}, cut)
+			case Left:
+				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
+				cut = p.NewTranslation(mgl64.Vec3{
+					o.Wall + 1,
+					-cutout.Width + board.Y + o.Wall - board.tolerance - cutout.X,
+					o.Wall + cutout.Y,
+				}, cut)
+			}
+
+			cut = p.NewTranslation(mgl64.Vec3{x}, cut)
+
+			cuts = append(cuts, cut)
+		}
+
+		x += board.X
+	}
+
+	return p.NewDifference(append(
+		[]p.Primitive{box},
+		cuts...,
+	)...)
 }
 
 func (o *Case) BuildBox() p.Primitive {
@@ -200,10 +264,10 @@ func (o *Case) BuildBox() p.Primitive {
 	)
 
 	board = p.NewUnion(
-		board,
+		o.applyCutouts(board),
 		p.NewUnion(holes...),
 	)
 
-	o.Primitive = board
-	return o.Primitive
+	o.BoxPrimitive = board
+	return o.BoxPrimitive
 }

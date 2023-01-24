@@ -9,12 +9,17 @@ func AmicaNodeMCU() Board {
 
 	hole := 2.50
 
+	usbWidth := 10.0
+
 	return Board{
 		Holes: []Hole{
 			{hole, hole, radius, standoffRadius},
 			{x - hole, hole, radius, standoffRadius},
 			{x - hole, y - hole, radius, standoffRadius},
 			{hole, y - hole, radius, standoffRadius},
+		},
+		Cutouts: []Cutout{
+			{X: x/2 - usbWidth/2, Y: 1.5, Width: usbWidth, Height: 4, Side: Top},
 		},
 		X:      x,
 		Y:      y,
