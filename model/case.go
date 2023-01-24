@@ -100,9 +100,13 @@ func (o *Case) GetDimensions() (x, y, height float64) {
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
+	var bottomStandoff p.Primitive = p.NewCylinder(o.StandoffHeight/2+o.Wall, hole.StandoffRadius*2).SetCenter(false)
 
 	standoff = p.NewDifference(
-		standoff,
+		p.NewUnion(
+			standoff,
+			bottomStandoff,
+		),
 		p.NewCylinder(o.StandoffHeight+1, hole.R).SetCenter(false),
 	)
 
