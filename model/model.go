@@ -9,7 +9,7 @@ import (
 func CO2SensorCase() []sys.Shape {
 	co2SensorCase := NewCase(
 		0.8,
-		1,
+		4,
 		2,
 		AmicaNodeMCU().WithTolerance(0.6),
 		SensirionSCD30().WithTolerance(0.6),
