@@ -17,9 +17,10 @@ const (
 )
 
 type Hole struct {
-	X, Y           float64
-	R              float64
-	StandoffRadius float64
+	X, Y             float64
+	R                float64
+	StandoffRadius   float64
+	WithtThickBottom bool
 }
 
 // Cutout defines a hole in the wall.
@@ -100,14 +101,15 @@ func (o *Case) GetDimensions() (x, y, height float64) {
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
-	var bottomStandoff p.Primitive = p.NewCylinder(o.StandoffHeight/2+o.Wall, hole.StandoffRadius*2).SetCenter(false)
-
-	standoff = p.NewDifference(
-		p.NewUnion(
+	if hole.WithtThickBottom {
+		standoff = p.NewUnion(
 			standoff,
-			bottomStandoff,
-		),
-		p.NewCylinder(o.StandoffHeight+1, hole.R).SetCenter(false),
+			p.NewCylinder(o.StandoffHeight/2+o.Wall, hole.StandoffRadius*2).SetCenter(false),
+		)
+	}
+	standoff = p.NewDifference(
+		standoff,
+		p.NewCylinder(o.StandoffHeight+o.Wall+1, hole.R).SetCenter(false),
 	)
 
 	standoff = p.NewTranslation(mgl64.Vec3{x + hole.X + o.Wall, hole.Y + o.Wall, 0}, standoff)
@@ -158,8 +160,8 @@ func (o *Case) BuildCover() p.Primitive {
 	cover = p.NewTranslation(mgl64.Vec3{0, 0, -o.CoverInsert + o.Wall}, cover)
 
 	if o.CoverHoles {
-		// Make the holes 4 times the wall thick.
-		holeWidth := o.Wall * 4
+		// Make the holes 2 times the wall thick.
+		holeWidth := o.Wall * 2
 		var count int = int(x/holeWidth) - 1
 
 		holes := []p.Primitive{}
@@ -169,7 +171,7 @@ func (o *Case) BuildCover() p.Primitive {
 				holes,
 				p.NewTranslation(
 					mgl64.Vec3{float64(i)*holeWidth + holeWidth, o.Wall * 2, -1},
-					p.NewCube(mgl64.Vec3{holeWidth, y - 2*o.Wall, o.Wall + 2}).SetCenter(false),
+					p.NewCube(mgl64.Vec3{holeWidth, y - 2*o.Wall, o.Wall*2 + 2}).SetCenter(false),
 				),
 			)
 		}
