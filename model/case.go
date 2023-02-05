@@ -72,15 +72,24 @@ type Case struct {
 	StandoffHeight float64
 	CoverInsert    float64
 
+	BoxHolesRadius float64
+
 	CoverHoles bool
 }
 
-func NewCase(wall float64, standoffHeight float64, coverInsert float64, boards ...Board) *Case {
+func NewCase(
+	wall float64,
+	standoffHeight float64,
+	coverInsert float64,
+	boxHolesRadius float64,
+	boards ...Board,
+) *Case {
 	return &Case{
 		Boards:         boards,
 		Wall:           wall,
 		StandoffHeight: standoffHeight,
 		CoverInsert:    coverInsert,
+		BoxHolesRadius: boxHolesRadius,
 	}
 }
 
@@ -237,6 +246,33 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 	)...)
 }
 
+func (o *Case) addBoxHoles(box p.Primitive) p.Primitive {
+	size := o.BoxHolesRadius * 3
+	var hole p.Primitive = p.NewCube(mgl64.Vec3{size, size, o.Wall}).SetCenter(false)
+
+	hole = p.NewDifference(
+		hole,
+		p.NewTranslation(
+			mgl64.Vec3{size / 2, size / 2},
+			p.NewCylinder(o.Wall*3, o.BoxHolesRadius),
+		),
+	)
+
+	_, y, _ := o.GetDimensions()
+
+	hole = p.NewTranslation(
+		mgl64.Vec3{-size, o.Wall + y/2},
+		hole,
+	)
+
+	box = p.NewUnion(
+		box,
+		hole.Highlight(),
+	)
+
+	return box
+}
+
 func (o *Case) BuildBox() p.Primitive {
 	holes := []p.Primitive{}
 
@@ -264,16 +300,18 @@ func (o *Case) BuildBox() p.Primitive {
 		p.NewCube(mgl64.Vec3{x, y, height + 1}).SetCenter(false),
 	)
 
-	board := p.NewDifference(
+	var box p.Primitive = p.NewDifference(
 		baseBlock,
 		cutout,
 	)
 
-	board = p.NewUnion(
-		o.applyCutouts(board),
+	box = p.NewUnion(
+		o.applyCutouts(box),
 		p.NewUnion(holes...),
 	)
 
-	o.BoxPrimitive = board
+	box = o.addBoxHoles(box)
+
+	o.BoxPrimitive = box
 	return o.BoxPrimitive
 }

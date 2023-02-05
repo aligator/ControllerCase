@@ -11,6 +11,7 @@ func CO2SensorCase() []sys.Shape {
 		1.4,
 		4,
 		2,
+		2,
 		AmicaNodeMCU().WithTolerance(0.6),
 		SensirionSCD30().WithTolerance(0.6),
 	).WithCoverHoles()
