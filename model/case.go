@@ -279,14 +279,14 @@ func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
 	x, y, _ := o.GetDimensions(true)
 
 	mount1 := p.NewTranslation(
-		mgl64.Vec3{x, y / 2, o.Wall / 2},
+		mgl64.Vec3{x - 0.1, y / 2, o.Wall / 2},
 		o.buildMountingHole(),
 	)
 
 	mount2 := o.buildMountingHole()
 	mount2 = p.NewMirror(mgl64.Vec3{1, 0, 0}, mount2)
 	mount2 = p.NewTranslation(
-		mgl64.Vec3{0, y / 2, o.Wall / 2},
+		mgl64.Vec3{0.1, y / 2, o.Wall / 2},
 		mount2,
 	)
 
