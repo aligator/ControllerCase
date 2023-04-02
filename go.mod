@@ -2,6 +2,8 @@ module co2sensor
 
 go 1.19
 
+replace github.com/ljanyst/ghostscad => github.com/aligator/ghostscad v0.2.1-0.20230402121555-58a86f579e52
+
 require (
 	github.com/go-gl/mathgl v1.0.0
 	github.com/ljanyst/ghostscad v0.2.1

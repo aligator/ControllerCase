@@ -17,10 +17,10 @@ const (
 )
 
 type Hole struct {
-	X, Y             float64
-	R                float64
-	StandoffRadius   float64
-	WithtThickBottom bool
+	X, Y            float64
+	R               float64
+	StandoffRadius  float64
+	WithThickBottom bool
 }
 
 // Cutout defines a hole in the wall.
@@ -72,7 +72,7 @@ type Case struct {
 	StandoffHeight float64
 	CoverInsert    float64
 
-	BoxHolesRadius float64
+	MountingHolesRadius float64
 
 	CoverHoles bool
 }
@@ -81,15 +81,15 @@ func NewCase(
 	wall float64,
 	standoffHeight float64,
 	coverInsert float64,
-	boxHolesRadius float64,
+	mountingHolesRadius float64,
 	boards ...Board,
 ) *Case {
 	return &Case{
-		Boards:         boards,
-		Wall:           wall,
-		StandoffHeight: standoffHeight,
-		CoverInsert:    coverInsert,
-		BoxHolesRadius: boxHolesRadius,
+		Boards:              boards,
+		Wall:                wall,
+		StandoffHeight:      standoffHeight,
+		CoverInsert:         coverInsert,
+		MountingHolesRadius: mountingHolesRadius,
 	}
 }
 
@@ -98,11 +98,17 @@ func (o *Case) WithCoverHoles() Case {
 	return *o
 }
 
-func (o *Case) GetDimensions() (x, y, height float64) {
+func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
 	for _, board := range o.Boards {
 		x += board.X
 		y = math.Max(y, board.Y)
 		height = math.Max(height, board.Height+o.StandoffHeight) // Take into account the StandoffHeight.
+	}
+
+	if withWalls {
+		x += 2 * o.Wall
+		y += 2 * o.Wall
+		height += o.Wall
 	}
 
 	return x, y, height + o.CoverInsert // Add cover insert to sure the boards fit.
@@ -110,7 +116,7 @@ func (o *Case) GetDimensions() (x, y, height float64) {
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
-	if hole.WithtThickBottom {
+	if hole.WithThickBottom {
 		standoff = p.NewUnion(
 			standoff,
 			p.NewCylinder(o.StandoffHeight/2+o.Wall, hole.StandoffRadius*2).SetCenter(false),
@@ -126,9 +132,8 @@ func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 }
 
 func (o *Case) BuildCover() p.Primitive {
-	x, y, _ := o.GetDimensions()
-	xWithWall := x + 2*o.Wall
-	yWithWall := y + 2*o.Wall
+	x, y, _ := o.GetDimensions(false)
+	xWithWall, yWithWall, _ := o.GetDimensions(true)
 
 	// The height is just the wall thickness*2 and then one wall thickness is cut out again.
 	heightWithWall := o.CoverInsert + o.Wall
@@ -246,28 +251,49 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 	)...)
 }
 
-func (o *Case) addBoxHoles(box p.Primitive) p.Primitive {
-	size := o.BoxHolesRadius * 3
-	var hole p.Primitive = p.NewCube(mgl64.Vec3{size, size, o.Wall}).SetCenter(false)
-
-	hole = p.NewDifference(
-		hole,
+func (o *Case) buildMountingHole() p.Primitive {
+	size := o.MountingHolesRadius*2 + o.Wall*2
+	var mount p.Primitive = p.NewHull(
 		p.NewTranslation(
-			mgl64.Vec3{size / 2, size / 2},
-			p.NewCylinder(o.Wall*3, o.BoxHolesRadius),
+			mgl64.Vec3{o.Wall / 2, 0, 0},
+			p.NewCube(mgl64.Vec3{o.Wall, size, o.Wall}).SetCenter(true),
+		),
+		p.NewTranslation(
+			mgl64.Vec3{size / 2, 0, 0},
+			p.NewCylinder(o.Wall, size/2),
 		),
 	)
 
-	_, y, _ := o.GetDimensions()
+	mount = p.NewDifference(
+		mount,
+		p.NewTranslation(
+			mgl64.Vec3{o.MountingHolesRadius + o.Wall, 0, 0},
+			p.NewCylinder(o.Wall*3, o.MountingHolesRadius),
+		),
+	)
 
-	hole = p.NewTranslation(
-		mgl64.Vec3{-size, o.Wall + y/2},
-		hole,
+	return mount
+}
+
+func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
+	x, y, _ := o.GetDimensions(true)
+
+	mount1 := p.NewTranslation(
+		mgl64.Vec3{x, y / 2, o.Wall / 2},
+		o.buildMountingHole(),
+	)
+
+	mount2 := o.buildMountingHole()
+	mount2 = p.NewMirror(mgl64.Vec3{1, 0, 0}, mount2)
+	mount2 = p.NewTranslation(
+		mgl64.Vec3{0, y / 2, o.Wall / 2},
+		mount2,
 	)
 
 	box = p.NewUnion(
 		box,
-		hole.Highlight(),
+		mount1,
+		mount2.Highlight(),
 	)
 
 	return box
@@ -287,10 +313,8 @@ func (o *Case) BuildBox() p.Primitive {
 		x += board.X
 	}
 
-	x, y, height := o.GetDimensions()
-	xWithWall := x + 2*o.Wall
-	yWithWall := y + 2*o.Wall
-	heightWithWall := height + o.Wall
+	x, y, height := o.GetDimensions(false)
+	xWithWall, yWithWall, heightWithWall := o.GetDimensions(true)
 
 	baseBlock := p.NewCube(mgl64.Vec3{xWithWall, yWithWall, heightWithWall}).SetCenter(false)
 
@@ -310,7 +334,7 @@ func (o *Case) BuildBox() p.Primitive {
 		p.NewUnion(holes...),
 	)
 
-	box = o.addBoxHoles(box)
+	box = o.addMountingHoles(box)
 
 	o.BoxPrimitive = box
 	return o.BoxPrimitive

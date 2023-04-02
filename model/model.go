@@ -8,15 +8,15 @@ import (
 
 func CO2SensorCase() []sys.Shape {
 	co2SensorCase := NewCase(
-		1.4,
-		4,
-		2,
-		2,
+		1.4, // wall
+		4,   // standoff height
+		2,   // cover insert
+		1.5, // mounting holes radius
 		AmicaNodeMCU().WithTolerance(0.6),
 		SensirionSCD30().WithTolerance(0.6),
 	).WithCoverHoles()
 
-	_, _, height := co2SensorCase.GetDimensions()
+	_, _, height := co2SensorCase.GetDimensions(false)
 
 	return []sys.Shape{
 		{
