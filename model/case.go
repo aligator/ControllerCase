@@ -42,11 +42,10 @@ type Board struct {
 	padding float64
 }
 
-// WithPadding returns a copy of the board, with the given tolerance added to all sides.
+// WithPadding returns a copy of the board, with the given padding added to all sides.
 // THe holes get adapted accordingly
 func (b Board) WithPadding(padding float64) Board {
 	withPadding := b
-	withPadding.Height += padding * 2
 	withPadding.X += padding * 2
 	withPadding.Y += padding * 2
 
@@ -57,7 +56,7 @@ func (b Board) WithPadding(padding float64) Board {
 	}
 
 	// The cutouts need to be calculated when building.
-	// The the tolerance has to be persisted.
+	// The the padding has to be persisted for this.
 	withPadding.padding = padding
 
 	return withPadding
@@ -71,6 +70,7 @@ type Case struct {
 	Wall           float64
 	StandoffHeight float64
 	CoverInsert    float64
+	HeightPadding  float64
 
 	MountingHolesRadius float64
 
@@ -93,9 +93,14 @@ func NewCase(
 	}
 }
 
-func (o *Case) WithCoverHoles() Case {
+func (o *Case) SetCoverHoles() *Case {
 	o.CoverHoles = true
-	return *o
+	return o
+}
+
+func (o *Case) SetHeightPadding(padding float64) *Case {
+	o.HeightPadding = padding
+	return o
 }
 
 func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
@@ -111,7 +116,7 @@ func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
 		height += o.Wall
 	}
 
-	return x, y, height + o.CoverInsert // Add cover insert to sure the boards fit.
+	return x, y, height + o.CoverInsert + o.HeightPadding // Add cover insert to be sure the boards fits.
 }
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
@@ -203,6 +208,8 @@ func (o *Case) BuildCover() p.Primitive {
 func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 	cuts := []p.Primitive{}
 
+	_, dimY, _ := o.GetDimensions(false)
+
 	x := 0.0
 	for _, board := range o.Boards {
 		for _, cutout := range board.Cutouts {
@@ -212,7 +219,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 			case Top:
 				cut = p.NewTranslation(mgl64.Vec3{
 					cutout.X + board.padding + o.Wall,
-					board.Y + o.Wall - 1,
+					dimY + o.Wall - 1,
 					o.Wall + cutout.Y,
 				}, cut)
 			case Right:
@@ -293,21 +300,26 @@ func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
 	box = p.NewUnion(
 		box,
 		mount1,
-		mount2.Highlight(),
+		mount2,
 	)
 
 	return box
 }
 
 func (o *Case) BuildBox() p.Primitive {
-	holes := []p.Primitive{}
+	standoffs := []p.Primitive{}
+
+	_, fullY, _ := o.GetDimensions(false)
 
 	// Build the base-block.
 	var x float64
 	for _, board := range o.Boards {
 		// Add hole standoffs.
 		for _, hole := range board.Holes {
-			holes = append(holes, o.buildStandoff(x, hole))
+			newStandoff := o.buildStandoff(x, hole)
+			// Move the board to the y center.
+			newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y) / 2, 0}, newStandoff)
+			standoffs = append(standoffs, newStandoff)
 		}
 
 		x += board.X
@@ -331,7 +343,7 @@ func (o *Case) BuildBox() p.Primitive {
 
 	box = p.NewUnion(
 		o.applyCutouts(box),
-		p.NewUnion(holes...),
+		p.NewUnion(standoffs...),
 	)
 
 	box = o.addMountingHoles(box)
