@@ -62,6 +62,11 @@ func (b Board) WithPadding(padding float64) Board {
 	return withPadding
 }
 
+func (b Board) WithCutout(cutout Cutout) Board {
+	b.Cutouts = append(b.Cutouts, cutout)
+	return b
+}
+
 type Case struct {
 	BoxPrimitive   p.Primitive
 	CoverPrimitive p.Primitive
