@@ -35,32 +35,32 @@ type Cutout struct {
 }
 
 type Board struct {
-	Holes     []Hole
-	Cutouts   []Cutout
-	X, Y      float64
-	Height    float64
-	tolerance float64
+	Holes   []Hole
+	Cutouts []Cutout
+	X, Y    float64
+	Height  float64
+	padding float64
 }
 
-// WithTolerance returns a copy of the board, with the given tolerance added to all sides.
+// WithPadding returns a copy of the board, with the given tolerance added to all sides.
 // THe holes get adapted accordingly
-func (b Board) WithTolerance(tolerance float64) Board {
-	withTolerance := b
-	withTolerance.Height += tolerance * 2
-	withTolerance.X += tolerance * 2
-	withTolerance.Y += tolerance * 2
+func (b Board) WithPadding(padding float64) Board {
+	withPadding := b
+	withPadding.Height += padding * 2
+	withPadding.X += padding * 2
+	withPadding.Y += padding * 2
 
 	// Modify holes.
-	for i := range withTolerance.Holes {
-		withTolerance.Holes[i].X += tolerance
-		withTolerance.Holes[i].Y += tolerance
+	for i := range withPadding.Holes {
+		withPadding.Holes[i].X += padding
+		withPadding.Holes[i].Y += padding
 	}
 
 	// The cutouts need to be calculated when building.
 	// The the tolerance has to be persisted.
-	withTolerance.tolerance = tolerance
+	withPadding.padding = padding
 
-	return withTolerance
+	return withPadding
 }
 
 type Case struct {
@@ -211,7 +211,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 			switch cutout.Side {
 			case Top:
 				cut = p.NewTranslation(mgl64.Vec3{
-					cutout.X + board.tolerance + o.Wall,
+					cutout.X + board.padding + o.Wall,
 					board.Y + o.Wall - 1,
 					o.Wall + cutout.Y,
 				}, cut)
@@ -219,12 +219,12 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall*2 + 1 + board.X,
-					o.Wall + cutout.X + board.tolerance,
+					o.Wall + cutout.X + board.padding,
 					o.Wall + cutout.Y,
 				}, cut)
 			case Bottom:
 				cut = p.NewTranslation(mgl64.Vec3{
-					o.Wall + cutout.X + board.tolerance,
+					o.Wall + cutout.X + board.padding,
 					-1,
 					o.Wall + cutout.Y,
 				}, cut)
@@ -232,7 +232,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + 1,
-					-cutout.Width + board.Y + o.Wall - board.tolerance - cutout.X,
+					-cutout.Width + board.Y + o.Wall - board.padding - cutout.X,
 					o.Wall + cutout.Y,
 				}, cut)
 			}
