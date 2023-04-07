@@ -12,29 +12,29 @@ func CO2SensorCase() []sys.Shape {
 		10,  // standoff height
 		2,   // cover insert
 		1.5, // mounting holes radius
-		AmicaNodeMCU().WithPadding(0.6),
-		SensirionSCD30().WithPadding(15).
+		AmicaNodeMCU().WithPadding(0.6).WithPosition(PositionTop),
+		SensirionSCD30().WithPadding(15).WithPosition(PositionCenter).
 			// Add cutout for better air ventilation.
 			WithCutout(Cutout{
 				X:      (23.0 - 15) / 2,
 				Y:      -5,
 				Width:  15,
 				Height: 10,
-				Side:   Top,
+				Side:   SideTop,
 			}).
 			WithCutout(Cutout{
 				X:      (23.0 - 15) / 2,
 				Y:      -4,
 				Width:  15,
 				Height: 10,
-				Side:   Bottom,
+				Side:   SideBottom,
 			}).
 			WithCutout(Cutout{
 				X:      (35.0 - 20) / 2,
 				Y:      -5,
 				Width:  20,
 				Height: 10,
-				Side:   Right,
+				Side:   SideRight,
 			}),
 	).
 		SetCoverHoles().

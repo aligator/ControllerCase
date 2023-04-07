@@ -10,10 +10,18 @@ import (
 type Side int
 
 const (
-	Top Side = iota
-	Right
-	Bottom
-	Left
+	SideTop Side = iota
+	SideRight
+	SideBottom
+	SideLeft
+)
+
+type Position int
+
+const (
+	PositionBottom Position = iota
+	PositionCenter
+	PositionTop
 )
 
 type Hole struct {
@@ -35,11 +43,12 @@ type Cutout struct {
 }
 
 type Board struct {
-	Holes   []Hole
-	Cutouts []Cutout
-	X, Y    float64
-	Height  float64
-	padding float64
+	Holes    []Hole
+	Cutouts  []Cutout
+	Position Position
+	X, Y     float64
+	Height   float64
+	padding  float64
 }
 
 // WithPadding returns a copy of the board, with the given padding added to all sides.
@@ -64,6 +73,11 @@ func (b Board) WithPadding(padding float64) Board {
 
 func (b Board) WithCutout(cutout Cutout) Board {
 	b.Cutouts = append(b.Cutouts, cutout)
+	return b
+}
+
+func (b Board) WithPosition(position Position) Board {
+	b.Position = position
 	return b
 }
 
@@ -221,26 +235,26 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 			var cut p.Primitive = p.NewCube(mgl64.Vec3{cutout.Width, o.Wall + 2, cutout.Height}).SetCenter(false)
 
 			switch cutout.Side {
-			case Top:
+			case SideTop:
 				cut = p.NewTranslation(mgl64.Vec3{
 					cutout.X + board.padding + o.Wall,
 					dimY + o.Wall - 1,
 					o.Wall + cutout.Y,
 				}, cut)
-			case Right:
+			case SideRight:
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall*2 + 1 + board.X,
 					o.Wall + cutout.X + board.padding,
 					o.Wall + cutout.Y,
 				}, cut)
-			case Bottom:
+			case SideBottom:
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + cutout.X + board.padding,
 					-1,
 					o.Wall + cutout.Y,
 				}, cut)
-			case Left:
+			case SideLeft:
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + 1,
@@ -322,8 +336,13 @@ func (o *Case) BuildBox() p.Primitive {
 		// Add hole standoffs.
 		for _, hole := range board.Holes {
 			newStandoff := o.buildStandoff(x, hole)
-			// Move the board to the y center.
-			newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y) / 2, 0}, newStandoff)
+			switch board.Position {
+			case PositionTop:
+				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y), 0}, newStandoff)
+			case PositionCenter:
+				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y) / 2, 0}, newStandoff)
+			}
+
 			standoffs = append(standoffs, newStandoff)
 		}
 
