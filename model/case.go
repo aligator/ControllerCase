@@ -138,6 +138,20 @@ func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
 	return x, y, height + o.CoverInsert + o.HeightPadding // Add cover insert to be sure the boards fits.
 }
 
+func (o *Case) GetCoverDimensions(withWalls bool) (x, y, height float64) {
+	for _, board := range o.Boards {
+		x += board.X
+		y = math.Max(y, board.Y)
+	}
+
+	if withWalls {
+		x += 2 * o.Wall
+		y += 2 * o.Wall
+	}
+
+	return x, y, o.Wall + o.CoverInsert
+}
+
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
 	if hole.WithThickBottom {
@@ -304,15 +318,18 @@ func (o *Case) buildMountingHole() p.Primitive {
 func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
 	x, y, _ := o.GetDimensions(true)
 
+	// The 0.01 is just to make sure the mount is connected with the box.
+	// Otherwise I had issues with PrusaSlicer.
+
 	mount1 := p.NewTranslation(
-		mgl64.Vec3{x - 0.1, y / 2, o.Wall / 2},
+		mgl64.Vec3{x - 0.01, y / 2, o.Wall / 2},
 		o.buildMountingHole(),
 	)
 
 	mount2 := o.buildMountingHole()
 	mount2 = p.NewMirror(mgl64.Vec3{1, 0, 0}, mount2)
 	mount2 = p.NewTranslation(
-		mgl64.Vec3{0.1, y / 2, o.Wall / 2},
+		mgl64.Vec3{0.01, y / 2, o.Wall / 2},
 		mount2,
 	)
 

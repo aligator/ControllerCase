@@ -52,8 +52,8 @@ func SensirionSCD30() Board {
 func LM317TConverter() Board {
 	x := 16.8
 	y := 35.6
-	radius := 1.3
-	standoffRadius := 2.0
+	radius := 1.6
+	standoffRadius := 3.0
 
 	cutoutWidth := 10.0
 	cutoutHeight := 10.0
@@ -61,8 +61,8 @@ func LM317TConverter() Board {
 	// It has two holes on the long side, with a diameter of 2.74mm anda distance from the border of 1,64mm.
 	return Board{
 		Holes: []Hole{
-			{1.64, 1.64, radius, standoffRadius, false},
-			{1.64, y - 1.64, radius, standoffRadius, false},
+			{1.64 + radius, 1.64 + radius, radius, standoffRadius, false},
+			{1.64 + radius, y - 1.64 - radius, radius, standoffRadius, false},
 		},
 		X:      x,
 		Y:      y,

@@ -7,7 +7,8 @@ import (
 )
 
 func Finish(controllerCase *Case) []sys.Shape {
-	_, _, height := controllerCase.GetDimensions(false)
+	x, y, _ := controllerCase.GetDimensions(true)
+	_, _, coverHeight := controllerCase.GetCoverDimensions(true)
 
 	return []sys.Shape{
 		{
@@ -20,7 +21,7 @@ func Finish(controllerCase *Case) []sys.Shape {
 			Name: "all",
 			Primitive: p.NewUnion(
 				controllerCase.BuildBox(),
-				p.NewTranslation(mgl64.Vec3{0, 0, height + 20}, controllerCase.BuildCover()),
+				p.NewRotationByAxis(180, mgl64.Vec3{1}, p.NewTranslation(mgl64.Vec3{x + 20, -y, -coverHeight}, controllerCase.BuildCover())),
 			),
 			Flags: sys.Default,
 		},
@@ -78,7 +79,7 @@ func LM317TConverterCase() []sys.Shape {
 		3,   // standoff height
 		2,   // cover insert
 		1.5, // mounting holes radius#
-		LM317TConverter().WithPadding(1),
+		LM317TConverter().WithPadding(3),
 	).
 		SetCoverHoles()
 
