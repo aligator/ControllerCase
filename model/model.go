@@ -6,6 +6,35 @@ import (
 	"github.com/ljanyst/ghostscad/sys"
 )
 
+func Finish(controllerCase *Case) []sys.Shape {
+	_, _, height := controllerCase.GetDimensions(false)
+
+	return []sys.Shape{
+		{
+			Name:      "all",
+			Primitive: controllerCase.BuildBox(),
+			Flags:     sys.Default,
+		},
+
+		{
+			Name: "all",
+			Primitive: p.NewUnion(
+				controllerCase.BuildBox(),
+				p.NewTranslation(mgl64.Vec3{0, 0, height + 20}, controllerCase.BuildCover()),
+			),
+			Flags: sys.Default,
+		},
+		{
+			Name:      "case",
+			Primitive: controllerCase.BuildBox(),
+		},
+		{
+			Name:      "cover",
+			Primitive: controllerCase.BuildCover(),
+		},
+	}
+}
+
 func CO2SensorCase() []sys.Shape {
 	co2SensorCase := NewCase(
 		1.4, // wall
@@ -40,24 +69,18 @@ func CO2SensorCase() []sys.Shape {
 		SetCoverHoles().
 		SetHeightPadding(1)
 
-	_, _, height := co2SensorCase.GetDimensions(false)
+	return Finish(co2SensorCase)
+}
 
-	return []sys.Shape{
-		{
-			Name: "all",
-			Primitive: p.NewUnion(
-				co2SensorCase.BuildBox(),
-				p.NewTranslation(mgl64.Vec3{0, 0, height + 20}, co2SensorCase.BuildCover()),
-			),
-			Flags: sys.Default,
-		},
-		{
-			Name:      "case",
-			Primitive: co2SensorCase.BuildBox(),
-		},
-		{
-			Name:      "cover",
-			Primitive: co2SensorCase.BuildCover(),
-		},
-	}
+func LM317TConverterCase() []sys.Shape {
+	converterCase := NewCase(
+		1.4, // wall
+		3,   // standoff height
+		2,   // cover insert
+		1.5, // mounting holes radius#
+		LM317TConverter().WithPadding(1),
+	).
+		SetCoverHoles()
+
+	return Finish(converterCase)
 }
