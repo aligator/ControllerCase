@@ -14,6 +14,9 @@ const (
 	SideRight
 	SideBottom
 	SideLeft
+	SideX
+	SideY
+	SideAll
 )
 
 type Position int
@@ -48,25 +51,52 @@ type Board struct {
 	Position Position
 	X, Y     float64
 	Height   float64
-	padding  float64
+	padding  [4]float64
 }
 
 // WithPadding returns a copy of the board, with the given padding added to all sides.
 // THe holes get adapted accordingly
-func (b Board) WithPadding(padding float64) Board {
+func (b Board) WithPadding(padding float64, side Side) Board {
 	withPadding := b
-	withPadding.X += padding * 2
-	withPadding.Y += padding * 2
+
+	newPadding := [4]float64{0, 0, 0, 0}
+
+	switch side {
+	case SideTop:
+		fallthrough
+	case SideRight:
+		fallthrough
+	case SideBottom:
+		fallthrough
+	case SideLeft:
+		newPadding[side] = padding
+	case SideX:
+		newPadding[SideLeft] = padding
+		newPadding[SideRight] = padding
+	case SideY:
+		newPadding[SideTop] = padding
+		newPadding[SideBottom] = padding
+	default:
+		newPadding[SideTop] = padding
+		newPadding[SideRight] = padding
+		newPadding[SideBottom] = padding
+		newPadding[SideLeft] = padding
+	}
+
+	withPadding.X += newPadding[SideLeft] + newPadding[SideRight]
+	withPadding.Y += newPadding[SideTop] + newPadding[SideBottom]
 
 	// Modify holes.
 	for i := range withPadding.Holes {
-		withPadding.Holes[i].X += padding
-		withPadding.Holes[i].Y += padding
+		withPadding.Holes[i].X += newPadding[SideLeft]
+		withPadding.Holes[i].Y += newPadding[SideBottom]
 	}
 
-	// The cutouts need to be calculated when building.
-	// The the padding has to be persisted for this.
-	withPadding.padding = padding
+	// Persist the padding for further calculations.
+	withPadding.padding[SideTop] += newPadding[SideTop]
+	withPadding.padding[SideRight] += newPadding[SideRight]
+	withPadding.padding[SideBottom] += newPadding[SideBottom]
+	withPadding.padding[SideLeft] += newPadding[SideLeft]
 
 	return withPadding
 }
@@ -251,7 +281,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 			switch cutout.Side {
 			case SideTop:
 				cut = p.NewTranslation(mgl64.Vec3{
-					cutout.X + board.padding + o.Wall,
+					cutout.X + board.padding[SideLeft] + o.Wall,
 					dimY + o.Wall - 1,
 					o.Wall + cutout.Y,
 				}, cut)
@@ -259,12 +289,12 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall*2 + 1 + board.X,
-					o.Wall + cutout.X + board.padding,
+					o.Wall + cutout.X + board.padding[SideLeft],
 					o.Wall + cutout.Y,
 				}, cut)
 			case SideBottom:
 				cut = p.NewTranslation(mgl64.Vec3{
-					o.Wall + cutout.X + board.padding,
+					o.Wall + cutout.X + board.padding[SideLeft],
 					-1,
 					o.Wall + cutout.Y,
 				}, cut)
@@ -272,14 +302,14 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + 1,
-					-cutout.Width + board.Y + o.Wall - board.padding - cutout.X,
+					-cutout.Width + board.Y + o.Wall - board.padding[SideLeft] - cutout.X,
 					o.Wall + cutout.Y,
 				}, cut)
 			}
 
 			cut = p.NewTranslation(mgl64.Vec3{x, 0, o.StandoffHeight}, cut)
 
-			cuts = append(cuts, cut)
+			cuts = append(cuts, cut.Highlight())
 		}
 
 		x += board.X

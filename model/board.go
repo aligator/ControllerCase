@@ -76,3 +76,33 @@ func LM317TConverter() Board {
 		},
 	}
 }
+
+func KY001JoyIt() Board {
+	x := 15.0
+	y := 21.0
+	radius := 1.4
+	standoffRadius := 3.0
+
+	cutoutWidth := 5.0
+	cutoutHeight := 2.1
+
+	// It has two holes on the long side, with a diameter of 2.74mm anda distance from the border of 1,64mm.
+	return Board{
+		Holes: []Hole{
+			{2.5, 4, radius, standoffRadius, false},
+			{x - 2.5, 4, radius, standoffRadius, false},
+		},
+		X:      x,
+		Y:      y,
+		Height: 11.0,
+
+		// It has cutouts on both short sides (top / bottom) big enough for the input and output wires.
+		// The cutouts are centered.
+		Cutouts: []Cutout{
+			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideTop},
+			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideLeft},
+			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideRight},
+			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideBottom},
+		},
+	}
+}

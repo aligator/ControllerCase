@@ -42,8 +42,8 @@ func CO2SensorCase() []sys.Shape {
 		10,  // standoff height
 		2,   // cover insert
 		1.5, // mounting holes radius
-		AmicaNodeMCU().WithPadding(0.6).WithPosition(PositionTop),
-		SensirionSCD30().WithPadding(15).WithPosition(PositionCenter).
+		AmicaNodeMCU().WithPadding(0.6, SideAll).WithPosition(PositionTop),
+		SensirionSCD30().WithPadding(15, SideAll).WithPosition(PositionCenter).
 			// Add cutout for better air ventilation.
 			WithCutout(Cutout{
 				X:      (23.0 - 15) / 2,
@@ -78,8 +78,23 @@ func LM317TConverterCase() []sys.Shape {
 		1.4, // wall
 		3,   // standoff height
 		2,   // cover insert
-		1.5, // mounting holes radius#
-		LM317TConverter().WithPadding(3),
+		2.5, // mounting holes radius#
+		LM317TConverter().WithPadding(3, SideAll),
+	).
+		SetCoverHoles()
+
+	return Finish(converterCase)
+}
+
+func KY001JoyItCase() []sys.Shape {
+	converterCase := NewCase(
+		1.4, // wall
+		3,   // standoff height
+		2,   // cover insert
+		2.5, // mounting holes radius#
+		KY001JoyIt().
+			WithPadding(1, SideAll).
+			WithPadding(20, SideTop),
 	).
 		SetCoverHoles()
 
