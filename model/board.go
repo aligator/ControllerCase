@@ -100,9 +100,6 @@ func KY001JoyIt() Board {
 		// The cutouts are centered.
 		Cutouts: []Cutout{
 			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideTop},
-			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideLeft},
-			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideRight},
-			{X: x/2 - cutoutWidth/2, Y: 11, Width: cutoutWidth, Height: cutoutHeight, Side: SideBottom},
 		},
 	}
 }

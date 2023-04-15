@@ -289,7 +289,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall*2 + 1 + board.X,
-					o.Wall + cutout.X + board.padding[SideLeft],
+					o.Wall + cutout.X + board.padding[SideBottom],
 					o.Wall + cutout.Y,
 				}, cut)
 			case SideBottom:
@@ -302,14 +302,14 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + 1,
-					-cutout.Width + board.Y + o.Wall - board.padding[SideLeft] - cutout.X,
+					-cutout.Width + board.Y + o.Wall - board.padding[SideTop] - cutout.X,
 					o.Wall + cutout.Y,
 				}, cut)
 			}
 
 			cut = p.NewTranslation(mgl64.Vec3{x, 0, o.StandoffHeight}, cut)
 
-			cuts = append(cuts, cut.Highlight())
+			cuts = append(cuts, cut)
 		}
 
 		x += board.X
