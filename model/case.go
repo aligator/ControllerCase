@@ -179,7 +179,7 @@ func (o *Case) GetCoverDimensions(withWalls bool) (x, y, height float64) {
 		y += 2 * o.Wall
 	}
 
-	return x, y, o.Wall + o.CoverInsert
+	return x, y, o.Wall * 2
 }
 
 func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
