@@ -11,5 +11,5 @@ func main() {
 
 	sys.SetFs(0.2)
 	sys.SetFa(12)
-	sys.RenderMultiple(model.KY001JoyItCase())
+	sys.RenderMultiple(model.LM317TConverterCase())
 }
