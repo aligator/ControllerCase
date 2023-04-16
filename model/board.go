@@ -61,8 +61,8 @@ func LM317TConverter() Board {
 	// It has two holes on the long side, with a diameter of 2.74mm anda distance from the border of 1,64mm.
 	return Board{
 		Holes: []Hole{
-			{1.64, 1.64, radius, standoffRadius, false},
-			{1.64, y - 1.64, radius, standoffRadius, false},
+			{2.8, 2.8, radius, standoffRadius, false},
+			{2.8, y - 2.8, radius, standoffRadius, false},
 		},
 		X:      x,
 		Y:      y,
