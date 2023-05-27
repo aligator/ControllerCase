@@ -1,4 +1,4 @@
-module co2sensor
+module github.com/aligator/ControllerCase
 
 go 1.19
 

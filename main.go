@@ -1,8 +1,7 @@
 package main
 
 import (
-	"co2sensor/model"
-
+	"github.com/aligator/ControllerCase/cases"
 	"github.com/ljanyst/ghostscad/sys"
 )
 
@@ -11,5 +10,5 @@ func main() {
 
 	sys.SetFs(0.2)
 	sys.SetFa(12)
-	sys.RenderMultiple(model.LM317TConverterCase())
+	sys.RenderMultiple(cases.HumiditySensorCase())
 }

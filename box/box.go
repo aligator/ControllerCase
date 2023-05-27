@@ -1,121 +1,19 @@
-package model
+package box
 
 import (
 	"math"
+
+	"github.com/aligator/ControllerCase/board"
 
 	"github.com/go-gl/mathgl/mgl64"
 	p "github.com/ljanyst/ghostscad/primitive"
 )
 
-type Side int
-
-const (
-	SideTop Side = iota
-	SideRight
-	SideBottom
-	SideLeft
-	SideX
-	SideY
-	SideAll
-)
-
-type Position int
-
-const (
-	PositionBottom Position = iota
-	PositionCenter
-	PositionTop
-)
-
-type Hole struct {
-	X, Y            float64
-	R               float64
-	StandoffRadius  float64
-	WithThickBottom bool
-}
-
-// Cutout defines a hole in the wall.
-// X and Y are always relative from the side, not from the global axes.
-// So if Side is "Left", you have to look from the left side onto the box
-// and then x is from bottom-left to bottom-right,
-// and y is from bottom to top.
-type Cutout struct {
-	X, Y          float64
-	Width, Height float64
-	Side          Side
-}
-
-type Board struct {
-	Holes    []Hole
-	Cutouts  []Cutout
-	Position Position
-	X, Y     float64
-	Height   float64
-	padding  [4]float64
-}
-
-// WithPadding returns a copy of the board, with the given padding added to all sides.
-// THe holes get adapted accordingly
-func (b Board) WithPadding(padding float64, side Side) Board {
-	withPadding := b
-
-	newPadding := [4]float64{0, 0, 0, 0}
-
-	switch side {
-	case SideTop:
-		fallthrough
-	case SideRight:
-		fallthrough
-	case SideBottom:
-		fallthrough
-	case SideLeft:
-		newPadding[side] = padding
-	case SideX:
-		newPadding[SideLeft] = padding
-		newPadding[SideRight] = padding
-	case SideY:
-		newPadding[SideTop] = padding
-		newPadding[SideBottom] = padding
-	default:
-		newPadding[SideTop] = padding
-		newPadding[SideRight] = padding
-		newPadding[SideBottom] = padding
-		newPadding[SideLeft] = padding
-	}
-
-	withPadding.X += newPadding[SideLeft] + newPadding[SideRight]
-	withPadding.Y += newPadding[SideTop] + newPadding[SideBottom]
-
-	// Modify holes.
-	for i := range withPadding.Holes {
-		withPadding.Holes[i].X += newPadding[SideLeft]
-		withPadding.Holes[i].Y += newPadding[SideBottom]
-	}
-
-	// Persist the padding for further calculations.
-	withPadding.padding[SideTop] += newPadding[SideTop]
-	withPadding.padding[SideRight] += newPadding[SideRight]
-	withPadding.padding[SideBottom] += newPadding[SideBottom]
-	withPadding.padding[SideLeft] += newPadding[SideLeft]
-
-	return withPadding
-}
-
-func (b Board) WithCutout(cutout Cutout) Board {
-	b.Cutouts = append(b.Cutouts, cutout)
-	return b
-}
-
-func (b Board) WithPosition(position Position) Board {
-	b.Position = position
-	return b
-}
-
-type Case struct {
+type Box struct {
 	BoxPrimitive   p.Primitive
 	CoverPrimitive p.Primitive
 
-	Boards         []Board
+	Boards         []board.Board
 	Wall           float64
 	StandoffHeight float64
 	CoverInsert    float64
@@ -126,14 +24,14 @@ type Case struct {
 	CoverHoles bool
 }
 
-func NewCase(
+func NewBox(
 	wall float64,
 	standoffHeight float64,
 	coverInsert float64,
 	mountingHolesRadius float64,
-	boards ...Board,
-) *Case {
-	return &Case{
+	boards ...board.Board,
+) *Box {
+	return &Box{
 		Boards:              boards,
 		Wall:                wall,
 		StandoffHeight:      standoffHeight,
@@ -142,17 +40,17 @@ func NewCase(
 	}
 }
 
-func (o *Case) SetCoverHoles() *Case {
+func (o *Box) SetCoverHoles() *Box {
 	o.CoverHoles = true
 	return o
 }
 
-func (o *Case) SetHeightPadding(padding float64) *Case {
+func (o *Box) SetHeightPadding(padding float64) *Box {
 	o.HeightPadding = padding
 	return o
 }
 
-func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
+func (o *Box) GetDimensions(withWalls bool) (x, y, height float64) {
 	for _, board := range o.Boards {
 		x += board.X
 		y = math.Max(y, board.Y)
@@ -168,7 +66,7 @@ func (o *Case) GetDimensions(withWalls bool) (x, y, height float64) {
 	return x, y, height + o.CoverInsert + o.HeightPadding // Add cover insert to be sure the boards fits.
 }
 
-func (o *Case) GetCoverDimensions(withWalls bool) (x, y, height float64) {
+func (o *Box) GetCoverDimensions(withWalls bool) (x, y, height float64) {
 	for _, board := range o.Boards {
 		x += board.X
 		y = math.Max(y, board.Y)
@@ -182,7 +80,7 @@ func (o *Case) GetCoverDimensions(withWalls bool) (x, y, height float64) {
 	return x, y, o.Wall * 2
 }
 
-func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
+func (o *Box) buildStandoff(x float64, hole board.Hole) p.Primitive {
 	var standoff p.Primitive = p.NewCylinder(o.StandoffHeight+o.Wall, hole.StandoffRadius).SetCenter(false)
 	if hole.WithThickBottom {
 		standoff = p.NewUnion(
@@ -199,7 +97,7 @@ func (o *Case) buildStandoff(x float64, hole Hole) p.Primitive {
 	return standoff
 }
 
-func (o *Case) BuildCover() p.Primitive {
+func (o *Box) BuildCover() p.Primitive {
 	x, y, _ := o.GetDimensions(false)
 	xWithWall, yWithWall, _ := o.GetDimensions(true)
 
@@ -268,41 +166,41 @@ func (o *Case) BuildCover() p.Primitive {
 	return o.CoverPrimitive
 }
 
-func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
+func (o *Box) applyCutouts(box p.Primitive) p.Primitive {
 	cuts := []p.Primitive{}
 
 	_, dimY, _ := o.GetDimensions(false)
 
 	x := 0.0
-	for _, board := range o.Boards {
-		for _, cutout := range board.Cutouts {
+	for _, b := range o.Boards {
+		for _, cutout := range b.Cutouts {
 			var cut p.Primitive = p.NewCube(mgl64.Vec3{cutout.Width, o.Wall + 2, cutout.Height}).SetCenter(false)
 
 			switch cutout.Side {
-			case SideTop:
+			case board.SideTop:
 				cut = p.NewTranslation(mgl64.Vec3{
-					cutout.X + board.padding[SideLeft] + o.Wall,
+					cutout.X + b.Padding[board.SideLeft] + o.Wall,
 					dimY + o.Wall - 1,
 					o.Wall + cutout.Y,
 				}, cut)
-			case SideRight:
+			case board.SideRight:
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
-					o.Wall*2 + 1 + board.X,
-					o.Wall + cutout.X + board.padding[SideBottom],
+					o.Wall*2 + 1 + b.X,
+					o.Wall + cutout.X + b.Padding[board.SideBottom],
 					o.Wall + cutout.Y,
 				}, cut)
-			case SideBottom:
+			case board.SideBottom:
 				cut = p.NewTranslation(mgl64.Vec3{
-					o.Wall + cutout.X + board.padding[SideLeft],
+					o.Wall + cutout.X + b.Padding[board.SideLeft],
 					-1,
 					o.Wall + cutout.Y,
 				}, cut)
-			case SideLeft:
+			case board.SideLeft:
 				cut = p.NewRotation(mgl64.Vec3{0, 0, 90}, cut)
 				cut = p.NewTranslation(mgl64.Vec3{
 					o.Wall + 1,
-					-cutout.Width + board.Y + o.Wall - board.padding[SideTop] - cutout.X,
+					-cutout.Width + b.Y + o.Wall - b.Padding[board.SideTop] - cutout.X,
 					o.Wall + cutout.Y,
 				}, cut)
 			}
@@ -312,7 +210,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 			cuts = append(cuts, cut)
 		}
 
-		x += board.X
+		x += b.X
 	}
 
 	return p.NewDifference(append(
@@ -321,7 +219,7 @@ func (o *Case) applyCutouts(box p.Primitive) p.Primitive {
 	)...)
 }
 
-func (o *Case) buildMountingHole() p.Primitive {
+func (o *Box) buildMountingHole() p.Primitive {
 	size := o.MountingHolesRadius*2 + o.Wall*2
 	var mount p.Primitive = p.NewHull(
 		p.NewTranslation(
@@ -345,7 +243,7 @@ func (o *Case) buildMountingHole() p.Primitive {
 	return mount
 }
 
-func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
+func (o *Box) addMountingHoles(box p.Primitive) p.Primitive {
 	x, y, _ := o.GetDimensions(true)
 
 	// The 0.01 is just to make sure the mount is connected with the box.
@@ -372,28 +270,28 @@ func (o *Case) addMountingHoles(box p.Primitive) p.Primitive {
 	return box
 }
 
-func (o *Case) BuildBox() p.Primitive {
+func (o *Box) BuildBox() p.Primitive {
 	standoffs := []p.Primitive{}
 
 	_, fullY, _ := o.GetDimensions(false)
 
 	// Build the base-block.
 	var x float64
-	for _, board := range o.Boards {
+	for _, b := range o.Boards {
 		// Add hole standoffs.
-		for _, hole := range board.Holes {
+		for _, hole := range b.Holes {
 			newStandoff := o.buildStandoff(x, hole)
-			switch board.Position {
-			case PositionTop:
-				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y), 0}, newStandoff)
-			case PositionCenter:
-				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - board.Y) / 2, 0}, newStandoff)
+			switch b.Position {
+			case board.PositionTop:
+				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - b.Y), 0}, newStandoff)
+			case board.PositionCenter:
+				newStandoff = p.NewTranslation(mgl64.Vec3{0, (fullY - b.Y) / 2, 0}, newStandoff)
 			}
 
 			standoffs = append(standoffs, newStandoff)
 		}
 
-		x += board.X
+		x += b.X
 	}
 
 	x, y, height := o.GetDimensions(false)
