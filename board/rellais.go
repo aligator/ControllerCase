@@ -5,7 +5,7 @@ package board
 func RelaisMakerfactory() Board {
 	x := 26.5
 	y := 34.0
-	radius := 1.5
+	radius := 1.3
 	standoffRadius := 3.0
 
 	holeX, holeY := 2.6, 2.6
