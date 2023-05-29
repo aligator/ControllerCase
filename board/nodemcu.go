@@ -30,11 +30,11 @@ func AmicaNodeMCU() Board {
 func LolinV3NodeMCU() Board {
 	x := 31.0
 	y := 58.0
-	radius := 1.6
+	radius := 1.5
 	standoffRadius := 2.6
 
-	holeX := 2.50
-	holeY := 2.30
+	holeX := 2.90
+	holeY := 2.90
 
 	return Board{
 		Holes: []Hole{

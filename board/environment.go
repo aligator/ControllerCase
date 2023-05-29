@@ -28,20 +28,21 @@ func KY001JoyIt() Board {
 	}
 }
 
-// K001JoyIt is a temperature sensor breakout board. https://joy-it.net/de/products/SEN-KY001TS
+// BMP280JoyIt is a temperature sensor breakout board.
+// https://www.reichelt.de/de/de/entwicklerboards-luftdruck-temperatursensor-bmp280-debo-sens-pt-p239109.html?r=1
 func BMP280JoyIt() Board {
-	x := 15.5
-	y := 11.8
-	radius := 1.5
+	x := 22.0
+	y := 30.0
+	radius := 1.4
 	standoffRadius := 3.0
-	holeCenterToCenter := 10.0
+	holeCenterToCenter := 15.0
 
 	leftHoleX := x/2 - holeCenterToCenter/2
 	rightHoleX := leftHoleX + holeCenterToCenter
 	holeY := leftHoleX
 
-	cutoutWidth := 23.0
-	cutoutHeight := 5.0
+	cutoutWidth := 16.0
+	cutoutHeight := 6.5
 
 	return Board{
 		Holes: []Hole{
@@ -61,7 +62,7 @@ func BMP280JoyIt() Board {
 func AM2302_DHT22() Board {
 	x := 16.0
 	y := 38.0
-	radius := 1.5
+	radius := 1.4
 	standoffRadius := 3.0
 
 	holeX := x / 2
